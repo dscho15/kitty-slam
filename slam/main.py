@@ -49,7 +49,7 @@ class VisualOdometry:
         return l_cam, r_cam
 
     @staticmethod
-    def _load_imgs(cam_dir):
+    def _load_imgs(cam_dir: list):
         list_dir = np.sort(os.listdir(cam_dir))
         l_imgs = []
         for i in range(len(list_dir)):
@@ -57,7 +57,7 @@ class VisualOdometry:
         logging.info("Number of imgs found: %d" % (len(l_imgs)))
         return l_imgs
 
-    def match_orb_features(self, i, visualize=False):
+    def match_orb_features(self, i: int, visualize=False):
         img_1 = self.l_imgs[i]
         img_2 = self.l_imgs[i + 1]
 
