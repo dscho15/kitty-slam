@@ -1,4 +1,5 @@
 from json import load
+from nis import match
 from operator import index
 import numpy as np
 import os
@@ -12,9 +13,9 @@ logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 class VisualOdometry:
 
     FLANN_INDEX_TREE = 1
-    TSH_ORB_MATCHING = 0.5
+    TSH_ORB_MATCHING = 0.30
 
-    def __init__(self, data_path, n_features=2000, n_trees=5, flann_precision=50, debug=True):
+    def __init__(self, data_path, n_features=2000, n_trees=5, flann_precision=50, debug=False):
         # log to a file
         logging.info("Loading poses, camera matrices and images")
         
@@ -52,20 +53,19 @@ class VisualOdometry:
         return l_cam, r_cam
 
     @staticmethod
-    def _load_imgs(cam_dir: list):
+    def _load_imgs(cam_dir: str):
         logging.info("Load imgs: %s " % (cam_dir))
         list_dir = np.sort(os.listdir(cam_dir))
-        left_imgs = []
+        imgs = []
         for i in range(len(list_dir)):
-            left_imgs.append(cv.imread(cam_dir + "/" + list_dir[i], 0))
-        logging.info("Number of imgs registered: %d" % (len(left_imgs)))
-        return left_imgs
-
+            imgs.append(cv.imread(cam_dir + "/" + list_dir[i], 0))
+        return imgs
+    
     @staticmethod
     def _H(R: np.array, t: np.array):
         H = np.eye(4, dtype=np.float32)
         H[:3, :3] = R
-        t[:3, 3] = t
+        H[:3, 3] = t.reshape(-1)
         return H
     
     def key(self, i: int, j: int):
@@ -86,11 +86,11 @@ class VisualOdometry:
         des_i = self.features[str(i)]["descriptor"]
         des_j = self.features[str(j)]["descriptor"]
         matches = self.flann.knnMatch(des_i, des_j, k=2)
-        mask = np.zeros(len(matches), dtype=np.int32)
+        filtered_matches = []
         for k in range(len(matches)):
             if matches[k][0].distance < self.TSH_ORB_MATCHING * matches[i][1].distance: # smaller means better
-                mask[k] = 1
-        return {"i": i, "j": j, "matches": matches, "mask": mask} 
+                filtered_matches.append(np.r_[matches[k][0].queryIdx, matches[k][0].trainIdx])
+        return {"i": i, "j": j, "matches": np.stack(filtered_matches)} 
     
     def _find_orb_features_and_match(self, i: int, j: int):
         keys = [i, j]
@@ -100,56 +100,35 @@ class VisualOdometry:
         key = self.key(i, j)
         if key not in self.matches:
             self.matches[key] = self._match_two_features(i, j)
-        logging.info("Number of matches, between image %s and %s: %d" % (str(i), str(j), np.sum(self.matches[str(i) + "_" + str(j)]["mask"])))
+        logging.info("Number of matches, between image %s and %s: %d" % (str(i), str(j), len(self.matches[key]["matches"])))
     
-    def _estimate_essential_matrix(self, i: int, j: int):
+    def estimate_essential_matrix(self, i: int, j: int):
         self._find_orb_features_and_match(i, j)
         kp_i, kp_j = self.features[str(i)]["keypoint"], self.features[str(j)]["keypoint"]
-        key = self.key(i, j)
-        _, _, matches, mask = self.matches[key].values()
-        kp_i, kp_j = kp_i[mask], kp_j[mask]
+        _, _, matches = self.matches[self.key(i, j)].values()
+        q_i, q_j = kp_i[matches[:, 0]], kp_j[matches[:, 1]]
+        E, mask = cv.findEssentialMat(q_i, q_j, self.left_cam[:3, :3])
+        return q_i, q_j, E
         
-        
-        
-        
-        # cv.findEssentialMat()
-
-# def match_orb_features(self, i: int, visualize=False):
-        
-    #     img_1 = self.l_imgs[i]
-    #     img_2 = self.l_imgs[i + 1]
-
-    #     kp_1, des_1 = self.orb.detectAndCompute(img_1, None)
-    #     kp_2, des_2 = self.orb.detectAndCompute(img_2, None)
-
-    #     matches = self.flann.knnMatch(np.float32(des_1), np.float32(des_2), k=2)
-
-    #     kps = dict(kp_1=[], kp_2=[])
-    #     if visualize is True:
-    #         mask_good_matches = np.zeros_like(matches)
-    #     for i in range(len(matches)):
-    #         # a smaller distance means closer, resource: https://www.programcreek.com/python/example/89342/cv2.drawMatchesKnn
-    #         if matches[i][0].distance < self.TSH_ORB_MATCHING * matches[i][1].distance:
-    #             if visualize is True:
-    #                 mask_good_matches[i, 0] = 1
-    #             kps["kp_1"].append(kp_1[matches[i][0].queryIdx].pt)
-    #             kps["kp_2"].append(kp_2[matches[i][0].trainIdx].pt)
-
-    #     if visualize is True:
-    #         logging.info("Number of good matches: %d" %
-    #                      (np.sum(mask_good_matches)))
-    #         imgs3 = cv.drawMatchesKnn(
-    #             img_1, kp_1, img_2, kp_2, matches[mask_good_matches], None)
-    #         plt.imshow(imgs3)
-    #         plt.show()
-
-    #     return kps
-
-    # def estimate_essential_matrix(self):
-    #     logging.info("Computing the essential matrix")
-    #     pass
-
+    def decompose_essential_matrix(self, q_i, q_j, E):
+        R1, R2, t = cv.decomposeEssentialMat(E)
+        KA = self.left_cam
+        homogenous_transformations = [self._H(R1, t), self._H(R1, -t), self._H(R2, t), self._H(R2, -t)]
+        best_pair = np.zeros(len(homogenous_transformations))
+        for idx, H in enumerate(homogenous_transformations):
+            Pi = KA @ np.eye(4, 4)
+            Pj = KA @ H
+            Q = cv.triangulatePoints(Pi, Pj, q_i.T, q_j.T)
+            Q = Q / Q[3, :]
+            z = np.array([0, 0, 1]).reshape((1, 3))
+            z_validation_cam1 = (z @ np.eye(3, 4) @ Q) > 0
+            z_validation_cam2 = (z @ H[:3, :] @ Q) > 0
+            z_validation = np.sum(np.logical_and(z_validation_cam1, z_validation_cam2))
+            best_pair[idx] = z_validation
+        idx = np.argmax(best_pair)
+        return homogenous_transformations[idx][:3, :3], homogenous_transformations[idx][:3, 3]
 
 p_data = os.path.dirname(__file__) + "/../data/KITTI_sequence_1"
-vo = VisualOdometry(p_data, n_features=2000, debug=True)
-vo._estimate_essential_matrix(0, 1)
+vo = VisualOdometry(p_data, n_features=2000, debug=False)
+q_i, q_j, E = vo.estimate_essential_matrix(0, 1)
+R, t = vo.decompose_essential_matrix(q_i, q_j, E)
