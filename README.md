@@ -15,14 +15,18 @@ Simultaneous localization and mapping (SLAM) is the computational problem of con
 
 Pangolin is a set of lightweight and portable utility libraries for prototyping 3D, numeric or video based programs and algorithms. It is used quite widely in the field of Computer Vision as a means to remove platform-specific boilerplate and make it easy to visualize data.
 
-1) the official github is found at: https://github.com/stevenlovegrove/Pangolin
+The offical github is found at: https://github.com/stevenlovegrove/Pangolin
+
+### Summary
+
+1) Clone the github
 
 ```
 # Clone Pangolin along with it's submodules
 git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
 ```
 
-2)
+2) Now download the necessary dependencies
 
 ```
 # See what package manager and packages are recommended
@@ -32,12 +36,11 @@ git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
 ./scripts/install_prerequisites.sh -m brew al
 ```
 
-3)
+3) Build Pangolin (cpp and python)
 
 ```
 # Get Pangolin
-cd ~/your_fav_code_directory
-git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
+cd ~/your_fav_code_directory && git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
 cd Pangolin 
 
 # Install dependencies (as described above, or your preferred method)
@@ -45,14 +48,10 @@ cd Pangolin
 
 # Configure and build
 mkdir build && cd build
-cmake ..
-cmake --build .
+cmake .. && cmake --build .
 
-# GIVEME THE PYTHON STUFF!!!! (Check the output to verify selected python version)
+# Check the output to verify selected python version
 cmake --build . -t pypangolin_pip_install
-
-# Run me some tests! (Requires Catch2 which must be manually installed on Ubuntu.)
-ctest
 ```
 
 ## File structure
