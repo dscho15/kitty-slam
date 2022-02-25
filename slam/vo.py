@@ -1,6 +1,3 @@
-from json import load
-from nis import match
-from operator import index
 import numpy as np
 import os
 import logging
@@ -13,17 +10,22 @@ logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 class VisualOdometry:
 
     FLANN_INDEX_TREE = 1
-    TSH_ORB_MATCHING = 0.30
+    TSH_ORB_MATCHING = 0.75
 
-    def __init__(self, data_path, n_features=2000, n_trees=5, flann_precision=50, debug=False):
+    def __init__(self, data_path, n_features=3000, n_trees=5, flann_precision=50, debug=False):
         # log to a file
         logging.info("Loading poses, camera matrices and images")
         
-        self.poses = self._load_poses(os.path.join(data_path, "poses.txt"))
+        self.gt_poses = self._load_poses(os.path.join(data_path, "poses.txt"))
         self.left_cam, self.right_cam = self._load_cam(os.path.join(data_path, "calib.txt"))
         self.left_imgs = self._load_imgs(os.path.join(data_path, "image_l"))
         self.right_imgs = self._load_imgs(os.path.join(data_path, "image_r"))
         self.debug = debug
+        
+        # cur pose
+        self.pose = np.eye(4, 4)
+        self.traj = [self.pose]
+        self.it = 1
 
         # init orb, could include more params
         self.n_features = n_features
@@ -114,7 +116,7 @@ class VisualOdometry:
         R1, R2, t = cv.decomposeEssentialMat(E)
         KA = self.left_cam
         homogenous_transformations = [self._H(R1, t), self._H(R1, -t), self._H(R2, t), self._H(R2, -t)]
-        best_pair = np.zeros(len(homogenous_transformations))
+        feasible_poses = np.zeros(len(homogenous_transformations))
         for idx, H in enumerate(homogenous_transformations):
             Pi = KA @ np.eye(4, 4)
             Pj = KA @ H
@@ -124,18 +126,26 @@ class VisualOdometry:
             z_validation_cam1 = (z @ np.eye(3, 4) @ Q) > 0
             z_validation_cam2 = (z @ H[:3, :] @ Q) > 0
             z_validation = np.sum(np.logical_and(z_validation_cam1, z_validation_cam2))
-            best_pair[idx] = z_validation
-        idx = np.argmax(best_pair)
+            feasible_poses[idx] = z_validation
+        idx = np.argmax(feasible_poses)
         return homogenous_transformations[idx][:3, :3], homogenous_transformations[idx][:3, 3]
     
-    def step(self, img_idx: int):
-        """
-        given an image idx, run the v_o algorithm
-        """
-        pass
+    def step(self):
+        assert self.it >= 1
+        if self.it >= len(self.gt_poses):
+            return False
+        q_i, q_j, E = self.estimate_essential_matrix(self.it-1, self.it)
+        R, t = self.decompose_essential_matrix(q_i, q_j, E)
+        T = self._H(R, t)
+        self.pose = self.pose @ np.linalg.inv(T)
+        self.it += 1
+        return True
     
-    
-p_data = os.path.dirname(__file__) + "/../data/KITTI_sequence_1"
+p_data = os.path.dirname(os.path.abspath(__file__)) + "/../data/KITTI_sequence_1"
 vo = VisualOdometry(p_data, n_features=2000, debug=False)
-q_i, q_j, E = vo.estimate_essential_matrix(0, 1)
-R, t = vo.decompose_essential_matrix(q_i, q_j, E)
+
+while vo.step() is True:
+    pass
+
+print(vo.gt_poses[-1])
+print(vo.pose)
