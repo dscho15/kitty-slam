@@ -127,7 +127,14 @@ class VisualOdometry:
             best_pair[idx] = z_validation
         idx = np.argmax(best_pair)
         return homogenous_transformations[idx][:3, :3], homogenous_transformations[idx][:3, 3]
-
+    
+    def step(self, img_idx: int):
+        """
+        given an image idx, run the v_o algorithm
+        """
+        pass
+    
+    
 p_data = os.path.dirname(__file__) + "/../data/KITTI_sequence_1"
 vo = VisualOdometry(p_data, n_features=2000, debug=False)
 q_i, q_j, E = vo.estimate_essential_matrix(0, 1)
