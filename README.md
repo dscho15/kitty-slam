@@ -10,6 +10,10 @@ It is possible to visualize the 3D trajectory with correspondence points.
 <img src="imgs/vis_slam.png" alt="drawing" width="728"/>
 </p>
 
+## Progress
+- `vo_monocular.py` is missing scale factor.
+- `vo_stereo.py` is not implemented yet.
+
 
 ## Dependencies
 
@@ -72,9 +76,16 @@ sudo apt-get install python-catkin-pkg
 
 # Usefull links
 
+## Monocular SLAM:
+
 1) https://github.com/geohot/twitchslam/blob/master/display.py
 2) https://github.com/yosoufe/SelfStudyRobotics/blob/a0ba92f82f01d44f5a786c1cc1b701641cc18dd1/experiments/visualizers/test_pangoline.py
 3) https://github.com/DroidAITech/vslam-evaluation/blob/931b7cba55a36ebeea31d4ff45d57af244a2fac9/ORB_SLAM2/ORB_SLAM2/src/Viewer.cc
 4) https://www.google.dk/search?q=openGl+draw+camera&source=hp&ei=KAIYYvqeH8yMxc8PycmPoAo&iflsig=AHkkrS4AAAAAYhgQOBbVLwdlY2NtFjKxwSV9Ids_qCzH&ved=0ahUKEwj60rq3rZn2AhVMRvEDHcnkA6QQ4dUDCAc&uact=5&oq=openGl+draw+camera&gs_lcp=Cgdnd3Mtd2l6EAMyBggAEBYQHjIGCAAQFhAeOggIABCABBCxAzoLCC4QgAQQxwEQrwE6CwguELEDEIMBENQCOg4ILhCABBCxAxDHARCvAToICAAQsQMQgwE6BggAEAoQQzoECAAQQzoLCAAQgAQQsQMQgwE6BQgAEIAEOg4ILhCABBCxAxDHARDRAzoHCAAQsQMQQzoICAAQFhAKEB5KBQhAEgExUABY2RZgzxdoAHAAeACAAXiIAcUIkgEEMTcuMZgBAKABAQ&sclient=gws-wiz
 5) http://www.open3d.org/docs/release/compilation.html
 6) https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html#gae850fad056e407befb9e2db04dd9e509
+
+## Stereo Slam
+
+1. http://webdiis.unizar.es/~jcivera/papers/pire_etal_ras17.pdf
+2. https://github.com/uoip/stereo_ptam
