@@ -10,6 +10,7 @@ class VisualOdometry:
 
     FLANN_INDEX_LSH = 6
     TSH_ORB_MATCHING = 0.5
+    COLORS = False
 
     def __init__(self, data_path, n_features=3000, flann_precision=100, debug=False):
         
@@ -26,7 +27,8 @@ class VisualOdometry:
 
         # triangulated_points
         self.Q_3d = []
-        self.colors = []
+        if self.COLORS is True:
+            self.colors = []
 
         # init orb, could include more params
         self.n_features = n_features
@@ -144,7 +146,8 @@ class VisualOdometry:
             return False
         q_i, q_j, E = self.estimate_essential_matrix(self.it-1, self.it)
         R, t, Q = self.decompose_essential_matrix(q_i, q_j, E)
-        self.colors.append(self.__colors(self.it, q_i))
+        if self.COLORS is True:
+            self.colors.append(self.__colors(self.it, q_i))
         w_T_cam = np.linalg.inv(self.__H(R, t))
         self.Q_3d.append(((self.pose @ Q)[:3, ...].T))
         self.pose = self.pose @ w_T_cam
@@ -157,7 +160,7 @@ if __name__ == "__main__":
     
     disp = Display()
 
-    p_data = os.path.dirname(os.path.abspath(__file__)) + "/../data/KITTI_sequence_1"
+    p_data = os.path.dirname(os.path.abspath(__file__)) + "/../data/KITTI_sequence_2"
     vo = VisualOdometry(p_data, n_features=3000)
 
     fps = 10
@@ -172,7 +175,7 @@ if __name__ == "__main__":
         pts["est_pose"] = est_pose
         pts["gt_poses"] = gt_poses
         pts["cam_pts"] = np.vstack(vo.Q_3d).reshape((-1, 3)).tolist()
-        pts["colors"] = np.hstack(vo.colors).reshape((-1)).tolist()
+        # pts["colors"] = np.hstack(vo.colors).reshape((-1)).tolist()
         disp.q.put(pts)
         time.sleep(dt)
         i += 1

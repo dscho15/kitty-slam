@@ -2,8 +2,6 @@ from multiprocessing import Process, Queue
 import pypangolin as pangolin
 import numpy as np
 import OpenGL.GL as gl
-import time
-import logging
 
 class Display:
 
@@ -25,15 +23,20 @@ class Display:
                 self.viewer_refresh(q)
     
     def viewer_init(self):
+        
         # Create window
         pangolin.CreateWindowAndBind("Map", self.w, self.h)
+        
         # Enable depth
         gl.glEnable(gl.GL_DEPTH_TEST)
+        
         # Source Camera
         self.s_cam = pangolin.OpenGlRenderState(pangolin.ProjectionMatrix(self.w, self.h, self.f, self.f, self.w//2, self.h//2, 0.2, 1000), 
                                                 pangolin.ModelViewLookAt(0, -30, -30, 0,  0,  0, 0, -1, 0))
+        
         # 3D Handler
         self.handler = pangolin.Handler3D(self.s_cam)
+
         # Create window (for interaction)
         self.d_cam = pangolin.CreateDisplay()
         self.d_cam.SetBounds(pangolin.Attach(0.), pangolin.Attach(1.), pangolin.Attach.Pix(320), pangolin.Attach(1.), -self.w/self.h)
@@ -63,11 +66,13 @@ class Display:
             pangolin.glDrawPoints(pt)
         
         if dict_pts["cam_pts"] is not None:
+            gl.glColor3f(0.1, 0.1, 0.1)
             pt = dict_pts["cam_pts"]
-            color = dict_pts["colors"]
-            for i in range(len(pt)):
-                gl.glColor3f(color[i]/255, color[i]/255, color[i]/255)
-                pangolin.glDrawPoints([pt[i]])
+            pangolin.glDrawPoints(pt)
+            # color = dict_pts["colors"]
+            # for i in range(len(pt)):
+            #     gl.glColor3f(color[i]/255, color[i]/255, color[i]/255)
+            #     pangolin.glDrawPoints([pt[i]])
 
         # Draw reference frames
         pangolin.FinishFrame()

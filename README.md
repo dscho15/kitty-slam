@@ -5,10 +5,10 @@
 Simultaneous localization and mapping (SLAM) is the computational problem of constructing or updating a map of an unknown environment while simultaneously keeping track of an agent's location within it. While this initially appears to be a chicken-and-egg problem there are several algorithms known for solving it, at least approximately, in tractable time for certain environments.
 
 ## Display Results
-
-The plot is made with Pangolin
-
-![alt text](imgs/vis_slam.png)
+It is possible to visualize the 3D trajectory with correspondence points.
+<p align="center">
+<img src="imgs/vis_slam.png" alt="drawing" width="728"/>
+</p>
 
 
 ## Dependencies
