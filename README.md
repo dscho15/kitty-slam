@@ -4,6 +4,12 @@
 
 Simultaneous localization and mapping (SLAM) is the computational problem of constructing or updating a map of an unknown environment while simultaneously keeping track of an agent's location within it. While this initially appears to be a chicken-and-egg problem there are several algorithms known for solving it, at least approximately, in tractable time for certain environments.
 
+## Display Results
+
+The plot is made with Pangolin
+
+![alt text](imgs/vis_slam.png)
+
 
 ## Dependencies
 
@@ -66,7 +72,8 @@ kitty-slam
    └─ slam.py
 ```
 
-## 
+## Installation of ROS (not needed yet)
+```
 sudo sh \
     -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" \
         > /etc/apt/sources.list.d/ros-latest.list'
@@ -74,6 +81,7 @@ sudo sh \
 wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
 
 sudo apt-get install python-catkin-pkg
+```
 
 # Usefull links
 
