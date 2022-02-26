@@ -13,7 +13,6 @@ It is possible to visualize the 3D trajectory with correspondence points.
 
 ## Dependencies
 
-- opencv
 - Pangolin
 - requirements.txt
 
@@ -23,7 +22,7 @@ Pangolin is a set of lightweight and portable utility libraries for prototyping 
 
 The offical github is found at: https://github.com/stevenlovegrove/Pangolin
 
-### Summary
+### How to install Pangolin?
 
 1) Clone the github
 
@@ -60,19 +59,7 @@ cmake .. && cmake --build .
 cmake --build . -t pypangolin_pip_install
 ```
 
-## File structure
-
-```
-kitty-slam
-|
-└─ slam
-   |
-   ├─ main.py
-   |
-   └─ slam.py
-```
-
-## Installation of ROS (not needed yet)
+### Installation of ROS (not needed yet)
 ```
 sudo sh \
     -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" \
